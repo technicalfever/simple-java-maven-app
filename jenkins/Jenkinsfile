@@ -15,10 +15,12 @@ pipeline {
             }
             post {
                 success {
-                    dir ('target') {
-                        def jarFileName = sh(returnStdout: true, script: "find -name '*.jar'").trim()
-                        stash includes: jarFileName, name: 'MyAppJar'
+                    script {
+                        dir ('target') {
+                            def jarFileName = sh(returnStdout: true, script: "find -name '*.jar'").trim()
+                            stash includes: jarFileName, name: 'MyAppJar'
 
+                        }
                     }
                 }
             }
