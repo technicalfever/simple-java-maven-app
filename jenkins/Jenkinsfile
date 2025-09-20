@@ -16,7 +16,7 @@ pipeline {
             post {
                 success {
                     script {
-                        def jarFileName = sh(returnStdout: true, script: "find test-pipeline/target -name '*.jar'").trim()
+                        def jarFileName = sh(returnStdout: true, script: "find target -name '*.jar'").trim()
                         stash includes: jarFileName, name: 'MyAppJar'
                     }
                 }
