@@ -62,17 +62,18 @@ pipeline {
                 expression { return params.envNodeSelector == 'Development' }
                 beforeAgent true
                 agent { label 'DevServer' }
+                steps {
+                    dir ('/home/ubuntu/deployment') {
+                        unstash 'MyAppJar'
+                    // sh './jenkins/scripts/deliver.sh' 
+                    }
+                    sh """
+                        cd /home/ubuntu/deployment
+                        jar  -xvf simple-java-maven-app-1.0-SNAPSHOT.jar
+                    """
+              }
             }
-            steps {
-                dir ('/home/ubuntu/deployment') {
-                    unstash 'MyAppJar'
-                // sh './jenkins/scripts/deliver.sh' 
-                }
-                sh """
-                    cd /home/ubuntu/deployment
-                    jar  -xvf simple-java-maven-app-1.0-SNAPSHOT.jar
-                """
-            }
-    }
+            
+        }   
     }
 }
