@@ -55,10 +55,11 @@ pipeline {
             agent { label 'DevServer' }
             steps {
                 script {
-                    def jarFileName = sh(returnStdout: true, script: "find /home/ubuntu/deployment -name '*.jar'").trim()
+                    
                     dir ('/home/ubuntu/deployment') {
                         unstash 'MyAppJar'
                     }
+                    def jarFileName = sh(returnStdout: true, script: "find /home/ubuntu/deployment -name '*.jar'").trim()
                     sh "jar -xvf ${jarFileName}"
                 }
             }
