@@ -11,6 +11,10 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                script {
+                    def file = load 'jenkins/script.groovy'
+                    file.helloWorld()
+                }
                 sh 'mvn -B -DskipTests clean package'
             }
             post {
@@ -48,7 +52,7 @@ pipeline {
                 }
             }
         }
-        stage('Deliver') { 
+        stage('deploy_dev') { 
             when {
                 expression { return params.envNodeSelector == 'Development' }
             }
@@ -63,6 +67,28 @@ pipeline {
                         sh "java -jar ${jarFileName}" //to execute the jar file
                     }
                     
+                }
+            }
+        }
+        stage('deploy_prod') { 
+            when {
+                expression { return params.envNodeSelector == 'Production' }
+            }
+            agent { label 'ProdServer' }
+            steps {
+                timeout(time: 1, unit: 'DAYS') {
+                    input message: 'Approve Deployment?', ok: 'Deploy Now'
+                
+                    script {
+                        
+                        dir ('/home/ubuntu/deployment') {
+                            unstash 'MyAppJar'
+                            def jarFileName = sh(returnStdout: true, script: "find /home/ubuntu/deployment -name '*.jar'").trim()
+                            sh "jar -xvf ${jarFileName}"
+                            sh "java -jar ${jarFileName}" //to execute the jar file
+                        }
+                        
+                    }
                 }
             }
         }
