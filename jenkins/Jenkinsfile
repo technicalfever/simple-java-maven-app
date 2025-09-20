@@ -61,7 +61,7 @@ pipeline {
                 }
                 sh """
                     cd /home/ubuntu/deployment
-                    jar -xvf $(find . -name "*.jar")
+                    jar -xvf \$(find . -name "*.jar")
                 """
             }
         }   
