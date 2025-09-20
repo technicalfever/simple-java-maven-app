@@ -16,11 +16,8 @@ pipeline {
             post {
                 success {
                     script {
-                        dir ('target') {
-                            def jarFileName = sh(returnStdout: true, script: "find -name '*.jar'").trim()
-                            stash includes: jarFileName, name: 'MyAppJar'
-
-                        }
+                        def jarFileName = sh(returnStdout: true, script: "find test-pipeline/target -name '*.jar'").trim()
+                        stash includes: jarFileName, name: 'MyAppJar'
                     }
                 }
             }
@@ -53,19 +50,18 @@ pipeline {
         }
         stage('Deliver') { 
             when {
-                expression {  params.envNodeSelector == 'Development' }
-                beforeAgent true
+                expression { return params.envNodeSelector == 'Development' }
             }
             agent { label 'DevServer' }
             steps {
-                dir ('/home/ubuntu/deployment') {
-                    unstash 'MyAppJar'
+                script {
+                    def jarFileName = sh(returnStdout: true, script: "find /home/ubuntu/deployment -name '*.jar'").trim()
+                    dir ('/home/ubuntu/deployment') {
+                        unstash 'MyAppJar'
+                    }
+                    sh "jar -xvf ${jarFileName}"
                 }
-                sh """
-                    cd /home/ubuntu/deployment
-                    jar -xvf \$(find . -name "*.jar")
-                """
             }
-        }   
+        }
     }
 }
