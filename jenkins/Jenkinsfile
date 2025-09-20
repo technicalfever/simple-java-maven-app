@@ -16,7 +16,9 @@ pipeline {
             post {
                 success {
                     dir ('target') {
-                        stash includes: '*.jar', name: 'MyAppJar'
+                        def jarFileName = sh(returnStdout: true, script: "find -name '*.jar'").trim()
+                        stash includes: jarFileName, name: 'MyAppJar'
+
                     }
                 }
             }
@@ -49,7 +51,8 @@ pipeline {
         }
         stage('Deliver') { 
             when {
-                expression { return params.envNodeSelector == 'Development' }
+                expression {  params.envNodeSelector == 'Development' }
+                beforeAgent true
             }
             agent { label 'DevServer' }
             steps {
@@ -58,7 +61,7 @@ pipeline {
                 }
                 sh """
                     cd /home/ubuntu/deployment
-                    jar  -xvf simple-java-maven-app-1.0-SNAPSHOT.jar
+                    jar -xvf $(find . -name "*.jar")
                 """
             }
         }   
