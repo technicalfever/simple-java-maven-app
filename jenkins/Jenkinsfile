@@ -60,6 +60,7 @@ pipeline {
                         unstash 'MyAppJar'
                         def jarFileName = sh(returnStdout: true, script: "find /home/ubuntu/deployment -name '*.jar'").trim()
                         sh "jar -xvf ${jarFileName}"
+                        sh 'java -jar my-app-1.0-SNAPSHOT.jar'
                     }
                     
                 }
