@@ -2,7 +2,9 @@ pipeline {
     agent {
         label 'DevServer'
     }
-
+    parameters {
+        string defaultValue: 'Abou-Rahma', description: 'My last name', name: 'LASTNAME'
+    }
     options {
         skipStagesAfterUnstable()
     }
@@ -14,6 +16,7 @@ pipeline {
             post {
                 success {
                     archiveArtifacts artifacts: '**/target/*.jar'
+                    echo "Build Success, from ${params.LASTNAME}"
                 }
             }
 
