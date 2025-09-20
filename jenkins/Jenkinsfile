@@ -3,7 +3,7 @@ pipeline {
         label 'DevServer'
     }
     parameters {
-        string defaultValue: 'Abou-Rahma', description: 'My last name', name: 'LASTNAME'
+        choice choices: ['Development', 'Production'], description: 'User to select his target node selector. ', name: 'envNodeSelector'
     }
     options {
         skipStagesAfterUnstable()
@@ -15,26 +15,64 @@ pipeline {
             }
             post {
                 success {
-                    archiveArtifacts artifacts: '**/target/*.jar'
-                    echo "Build Success, from ${params.LASTNAME}"
+                    // archiveArtifacts artifacts: '**/target/*.jar'
+                    // echo "Build Success, from ${params.LASTNAME}"
+                    dir ('test-pipeline/target') {
+                        stash includes: '*.jar', name: 'MyAppJar'
+                    }
                 }
             }
 
         }
         stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
+            //agent {` label "${params.envNodeSelector}" }
+            parallel  {
+                stage('Test on DevServer') {
+                    agent { label "DevServer" }
+                    steps {
+                        sh 'mvn test'
+                    }
+                    post {
+                        always {
+                            junit 'target/surefire-reports/*.xml'
+                        }
+                    }
+                }
+                stage('Test on PodServer') {
+                    agent  { label "DevServer" }
+                    steps {
+                        sh 'mvn test'
+                    }
+                    post {
+                        always {
+                            junit 'target/surefire-reports/*.xml'
+                        }
+                    }
                 }
             }
+            
+            // post {
+            //     always {
+            //         junit 'target/surefire-reports/*.xml'
+            //     }
+            // }
         }
         stage('Deliver') { 
-            steps {
-                sh './jenkins/scripts/deliver.sh' 
+            when {
+                expression { return params.envNodeSelector == 'Development' }
+                beforeAgent true
+                agent { label 'DevServer' }
             }
-        }
+            steps {
+                dir ('/home/ubuntu/deployment') {
+                    unstash 'MyAppJar'
+                // sh './jenkins/scripts/deliver.sh' 
+                }
+                sh """
+                    cd /home/ubuntu/deployment
+                    jar  -xvf simple-java-maven-app-1.0-SNAPSHOT.jar
+                """
+            }
+    }
     }
 }
